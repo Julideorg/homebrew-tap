@@ -18,7 +18,10 @@ CASK="Casks/julide.rb"
   exit 1
 }
 
-emit() { [[ -n "${GITHUB_OUTPUT:-}" ]] && echo "${1}" >>"${GITHUB_OUTPUT}"; return 0; }
+emit() {
+  [[ -n "${GITHUB_OUTPUT:-}" ]] && echo "${1}" >>"${GITHUB_OUTPUT}"
+  return 0
+}
 
 sha256_of() {
   if command -v sha256sum >/dev/null 2>&1; then

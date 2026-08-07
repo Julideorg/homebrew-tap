@@ -1,0 +1,13 @@
+# https://editorconfig.org/
+#
+# `brew style` runs shfmt over scripts/, and shfmt takes its indentation from
+# EditorConfig rather than from flags. These values match Homebrew's own.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true

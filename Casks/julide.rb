@@ -15,11 +15,10 @@ cask "julide" do
     strategy :github_latest
   end
 
-  depends_on macos: :catalina
-
-  # julIDE updates itself through tauri-plugin-updater, so brew must not try to
-  # manage upgrades on its behalf.
+  # auto_updates: julIDE updates itself through tauri-plugin-updater, so brew must not
+  # try to manage upgrades on its behalf.
   auto_updates true
+  depends_on macos: :catalina
 
   app "julide.app"
 

@@ -32,6 +32,7 @@ jobs:
       # long as it ships unsigned. Tighten this to a required check once we know which
       # findings we can actually clear.
       - name: brew audit
+        if: always()
         continue-on-error: true
         run: brew audit --cask --online "$TAP/julide"
 
