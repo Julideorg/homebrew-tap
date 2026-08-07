@@ -51,15 +51,17 @@ Both the `postflight` block and this section go away once julIDE is signed and n
 ## Maintenance
 
 `.github/workflows/bump-cask.yml` runs daily, finds the newest *published* JulIde
-release, downloads both DMGs, and commits the new version and checksums. After
-publishing a release you can skip the wait:
+release, downloads both DMGs, and rewrites the version and checksums. It then runs
+`brew style` and a real `brew install --cask` against the bumped cask, and pushes only
+if that passes — a push made with `GITHUB_TOKEN` does not trigger `ci.yml`, so this job
+verifies its own work. After publishing a release you can skip the wait:
 
 ```bash
 gh workflow run bump-cask.yml --repo Julideorg/homebrew-tap
 ```
 
-`.github/workflows/ci.yml` runs `brew style`, `brew audit`, and a real
-`brew install --cask` smoke test on a macOS runner for every push and pull request.
+`.github/workflows/ci.yml` runs `brew style`, `brew audit`, and the same
+`brew install --cask` smoke test for every push and pull request.
 
 ## License
 

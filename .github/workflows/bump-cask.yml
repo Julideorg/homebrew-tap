@@ -13,20 +13,46 @@ permissions:
 
 jobs:
   bump:
-    runs-on: ubuntu-latest
+    # macOS, because the bumped cask is smoke-tested with a real `brew install` before
+    # it is pushed. A push made with GITHUB_TOKEN does not trigger ci.yml, so verifying
+    # here is the only thing standing between a bad bump and `brew install` users.
+    runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v5
+      - name: Set up Homebrew
+        id: brew
+        uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c
 
       - name: Bump the cask to the latest release
         id: bump
+        working-directory: ${{ steps.brew.outputs.repository-path }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./scripts/bump-julide.sh
 
+      - name: brew style
+        if: steps.bump.outputs.bumped == 'true'
+        run: brew style "${{ steps.brew.outputs.tap-name }}"
+
+      - name: Smoke-test the bumped cask
+        if: steps.bump.outputs.bumped == 'true'
+        run: |
+          brew install --cask "${{ steps.brew.outputs.tap-name }}/julide"
+          test -d /Applications/julide.app
+          if xattr -r -l /Applications/julide.app | grep -q com.apple.quarantine; then
+            echo "::error::com.apple.quarantine survived on /Applications/julide.app"
+            exit 1
+          fi
+          brew uninstall --cask julide
+
       - name: Commit and push
         if: steps.bump.outputs.bumped == 'true'
+        working-directory: ${{ steps.brew.outputs.repository-path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin \
+            "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git commit -am "julide ${{ steps.bump.outputs.version }}"
-          git push
+          git push origin HEAD:refs/heads/main

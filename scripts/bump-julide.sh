@@ -4,6 +4,9 @@
 #
 # Idempotent: exits 0 without touching anything if the cask is already current.
 # Needs `gh` (authenticated) and `curl`. Run from the tap root.
+#
+# Deliberately portable to bash 3.2 and a BSD userland so it runs on macOS runners as
+# well as Linux: no associative arrays, no `sed -i`, no `sha256sum`.
 set -euo pipefail
 
 REPO="Julideorg/JulIde"
@@ -11,38 +14,52 @@ CASK="Casks/julide.rb"
 
 [[ -f "$CASK" ]] || { echo "run me from the tap root ($CASK not found)" >&2; exit 1; }
 
+emit() { [[ -n "${GITHUB_OUTPUT:-}" ]] && echo "$1" >>"$GITHUB_OUTPUT"; return 0; }
+
+sha256_of() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | cut -d' ' -f1
+  else
+    shasum -a 256 "$1" | cut -d' ' -f1
+  fi
+}
+
 # /releases/latest skips drafts and prereleases, which is what we want: JulIde's
 # release workflow creates drafts, and only a published stable release should ship.
 tag=$(gh api "repos/$REPO/releases/latest" --jq .tag_name)
 version="${tag#v}"
 current=$(sed -nE 's/^ *version "([^"]+)".*/\1/p' "$CASK")
 
-emit() { [[ -n "${GITHUB_OUTPUT:-}" ]] && echo "$1" >>"$GITHUB_OUTPUT"; return 0; }
+emit "version=$version"
 
 if [[ "$version" == "$current" ]]; then
   echo "julide cask already at $current"
   emit "bumped=false"
-  emit "version=$current"
   exit 0
 fi
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-declare -A sha
-for a in aarch64 x64; do
-  asset="julide_${version}_${a}.dmg"
+# $1 is the architecture as it appears in the asset name.
+download_sha() {
+  asset="julide_${version}_$1.dmg"
   # -f on purpose: a missing asset means the release is still uploading or the naming
   # changed, and that should be a loud failure rather than a silently skipped bump.
   curl -fsSL --retry 3 -o "$tmp/$asset" \
     "https://github.com/$REPO/releases/download/$tag/$asset"
-  sha[$a]=$(sha256sum "$tmp/$asset" | cut -d' ' -f1)
-done
+  sha256_of "$tmp/$asset"
+}
 
-sed -i -E "s|^( *version ).*|\1\"$version\"|" "$CASK"
-sed -i -E "s|^( *sha256 arm: *).*|\1\"${sha[aarch64]}\",|" "$CASK"
-sed -i -E "s|^( *intel: *).*|\1\"${sha[x64]}\"|" "$CASK"
+sha_arm=$(download_sha aarch64)
+sha_intel=$(download_sha x64)
+
+sed -E \
+  -e "s|^( *version ).*|\1\"$version\"|" \
+  -e "s|^( *sha256 arm: *).*|\1\"$sha_arm\",|" \
+  -e "s|^( *intel: *).*|\1\"$sha_intel\"|" \
+  "$CASK" >"$tmp/julide.rb"
+mv "$tmp/julide.rb" "$CASK"
 
 echo "bumped julide $current -> $version"
 emit "bumped=true"
-emit "version=$version"

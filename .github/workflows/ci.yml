@@ -15,22 +15,14 @@ jobs:
     name: brew style & audit
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v5
-        with:
-          path: homebrew-tap
-
+      # This also checks the tap out into Homebrew's Library/Taps at GITHUB_SHA, so no
+      # actions/checkout step is wanted here — adding one fights it for the same path.
       - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@master
-
-      - name: Link this checkout in as the tap
-        run: |
-          tap_dir="$(brew --repository Julideorg/tap)"
-          mkdir -p "$(dirname "$tap_dir")"
-          rm -rf "$tap_dir"
-          ln -s "$GITHUB_WORKSPACE/homebrew-tap" "$tap_dir"
+        id: brew
+        uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c
 
       - name: brew style
-        run: brew style Julideorg/tap
+        run: brew style "${{ steps.brew.outputs.tap-name }}"
 
       # Advisory: some audit rules only apply to casks hosted in homebrew/cask —
       # notably the rejection of legacy `postflight` blocks, which julIDE needs for as
@@ -38,29 +30,19 @@ jobs:
       # findings we can actually clear.
       - name: brew audit
         continue-on-error: true
-        run: brew audit --cask --online Julideorg/tap/julide
+        run: brew audit --cask --online "${{ steps.brew.outputs.tap-name }}/julide"
 
   install:
     name: install smoke test
     # macos-latest is arm64, so this exercises the Apple Silicon branch of the cask.
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v5
-        with:
-          path: homebrew-tap
-
       - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@master
-
-      - name: Link this checkout in as the tap
-        run: |
-          tap_dir="$(brew --repository Julideorg/tap)"
-          mkdir -p "$(dirname "$tap_dir")"
-          rm -rf "$tap_dir"
-          ln -s "$GITHUB_WORKSPACE/homebrew-tap" "$tap_dir"
+        id: brew
+        uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c
 
       - name: brew install --cask julide
-        run: brew install --cask Julideorg/tap/julide
+        run: brew install --cask "${{ steps.brew.outputs.tap-name }}/julide"
 
       - name: App is installed and de-quarantined
         run: |
