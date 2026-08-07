@@ -11,6 +11,9 @@ on:
 permissions:
   contents: write
 
+env:
+  TAP: julideorg/tap
+
 jobs:
   bump:
     # macOS, because the bumped cask is smoke-tested with a real `brew install` before
@@ -18,25 +21,25 @@ jobs:
     # here is the only thing standing between a bad bump and `brew install` users.
     runs-on: macos-latest
     steps:
+      # Checks the tap out into Library/Taps and symlinks it to the workspace, so the
+      # working directory below is both the git repo and what brew reads the cask from.
       - name: Set up Homebrew
-        id: brew
         uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c
 
       - name: Bump the cask to the latest release
         id: bump
-        working-directory: ${{ steps.brew.outputs.repository-path }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./scripts/bump-julide.sh
 
       - name: brew style
         if: steps.bump.outputs.bumped == 'true'
-        run: brew style "${{ steps.brew.outputs.tap-name }}"
+        run: brew style "$TAP"
 
       - name: Smoke-test the bumped cask
         if: steps.bump.outputs.bumped == 'true'
         run: |
-          brew install --cask "${{ steps.brew.outputs.tap-name }}/julide"
+          brew install --cask "$TAP/julide"
           test -d /Applications/julide.app
           if xattr -r -l /Applications/julide.app | grep -q com.apple.quarantine; then
             echo "::error::com.apple.quarantine survived on /Applications/julide.app"
@@ -46,7 +49,6 @@ jobs:
 
       - name: Commit and push
         if: steps.bump.outputs.bumped == 'true'
-        working-directory: ${{ steps.brew.outputs.repository-path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

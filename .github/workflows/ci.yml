@@ -10,19 +10,22 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  TAP: julideorg/tap
+
 jobs:
   lint:
     name: brew style & audit
     runs-on: macos-latest
     steps:
-      # This also checks the tap out into Homebrew's Library/Taps at GITHUB_SHA, so no
-      # actions/checkout step is wanted here — adding one fights it for the same path.
+      # This also checks the tap out into Homebrew's Library/Taps at GITHUB_SHA and
+      # symlinks it to the workspace, so no actions/checkout step is wanted here —
+      # adding one fights it for the same path and the job dies before it starts.
       - name: Set up Homebrew
-        id: brew
         uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c
 
       - name: brew style
-        run: brew style "${{ steps.brew.outputs.tap-name }}"
+        run: brew style "$TAP"
 
       # Advisory: some audit rules only apply to casks hosted in homebrew/cask —
       # notably the rejection of legacy `postflight` blocks, which julIDE needs for as
@@ -30,7 +33,7 @@ jobs:
       # findings we can actually clear.
       - name: brew audit
         continue-on-error: true
-        run: brew audit --cask --online "${{ steps.brew.outputs.tap-name }}/julide"
+        run: brew audit --cask --online "$TAP/julide"
 
   install:
     name: install smoke test
@@ -38,11 +41,10 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Set up Homebrew
-        id: brew
         uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c
 
       - name: brew install --cask julide
-        run: brew install --cask "${{ steps.brew.outputs.tap-name }}/julide"
+        run: brew install --cask "$TAP/julide"
 
       - name: App is installed and de-quarantined
         run: |
