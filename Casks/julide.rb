@@ -15,10 +15,11 @@ cask "julide" do
     strategy :github_latest
   end
 
+  depends_on macos: :catalina
+
   # julIDE updates itself through tauri-plugin-updater, so brew must not try to
   # manage upgrades on its behalf.
   auto_updates true
-  depends_on macos: ">= :catalina"
 
   app "julide.app"
 
@@ -30,14 +31,6 @@ cask "julide" do
                    args: ["-dr", "com.apple.quarantine", "#{appdir}/julide.app"]
   end
 
-  caveats <<~EOS
-    julIDE is not yet code-signed or notarized, so the macOS quarantine attribute
-    was removed from #{appdir}/julide.app on your behalf.
-
-    julIDE does not bundle Julia. You need Julia 1.6 or newer:
-      brew install julia
-  EOS
-
   zap trash: [
     "~/Library/Application Support/julide",
     "~/Library/Caches/com.ofek.julide",
@@ -45,4 +38,12 @@ cask "julide" do
     "~/Library/Saved Application State/com.ofek.julide.savedState",
     "~/Library/WebKit/com.ofek.julide",
   ]
+
+  caveats <<~EOS
+    julIDE is not yet code-signed or notarized, so the macOS quarantine attribute
+    was removed from #{appdir}/julide.app on your behalf.
+
+    julIDE does not bundle Julia. You need Julia 1.6 or newer:
+      brew install julia
+  EOS
 end
