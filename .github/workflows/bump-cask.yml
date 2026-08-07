@@ -1,0 +1,32 @@
+name: Bump julide cask
+
+# JulIde's release workflow publishes a *draft* release that a maintainer then
+# publishes by hand, so polling for the latest published release is the right trigger.
+# Run the workflow manually to pick up a release without waiting for the next tick.
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Bump the cask to the latest release
+        id: bump
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./scripts/bump-julide.sh
+
+      - name: Commit and push
+        if: steps.bump.outputs.bumped == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "julide ${{ steps.bump.outputs.version }}"
+          git push
