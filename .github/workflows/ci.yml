@@ -24,8 +24,19 @@ jobs:
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c
 
-      - name: brew style
-        run: brew style "$TAP"
+      # Scoped to the cask on purpose. `brew style "$TAP"` would also run shfmt over
+      # scripts/ using Homebrew's internal house style, which is neither documented nor
+      # stable across brew releases (the stable brew wants `then` on its own line; the
+      # flags in master's style.rb produce the opposite). The script is linted below
+      # with plain shellcheck and shfmt instead, which is reproducible locally.
+      - name: brew style (cask)
+        run: brew style "$TAP/julide"
+
+      - name: shellcheck & shfmt (scripts)
+        run: |
+          brew install --quiet shellcheck shfmt
+          shellcheck --enable=all scripts/bump-julide.sh
+          shfmt --diff scripts/bump-julide.sh
 
       # Advisory: some audit rules only apply to casks hosted in homebrew/cask —
       # notably the rejection of legacy `postflight` blocks, which julIDE needs for as

@@ -32,9 +32,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./scripts/bump-julide.sh
 
-      - name: brew style
+      # Cask only — see the comment in ci.yml for why this is not `brew style "$TAP"`.
+      - name: brew style (cask)
         if: steps.bump.outputs.bumped == 'true'
-        run: brew style "$TAP"
+        run: brew style "$TAP/julide"
 
       - name: Smoke-test the bumped cask
         if: steps.bump.outputs.bumped == 'true'

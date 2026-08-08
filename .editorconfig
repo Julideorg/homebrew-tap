@@ -1,7 +1,7 @@
 # https://editorconfig.org/
 #
-# `brew style` runs shfmt over scripts/, and shfmt takes its indentation from
-# EditorConfig rather than from flags. These values match Homebrew's own.
+# shfmt reads its indentation from EditorConfig when no formatting flags are passed,
+# so this is what the `shfmt --diff` check in CI enforces. Values match Homebrew's own.
 
 root = true
 
