@@ -38,13 +38,11 @@ jobs:
           shellcheck --enable=all scripts/bump-julide.sh
           shfmt --diff scripts/bump-julide.sh
 
-      # Advisory: some audit rules only apply to casks hosted in homebrew/cask —
-      # notably the rejection of legacy `postflight` blocks, which julIDE needs for as
-      # long as it ships unsigned. Tighten this to a required check once we know which
-      # findings we can actually clear.
+      # Passes clean today, including the legacy `postflight` block that julIDE needs
+      # for as long as it ships unsigned, so this is a required check. `always()` so a
+      # style failure does not hide audit findings.
       - name: brew audit
         if: always()
-        continue-on-error: true
         run: brew audit --cask --online "$TAP/julide"
 
   install:
