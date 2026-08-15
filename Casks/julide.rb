@@ -1,9 +1,9 @@
 cask "julide" do
   arch arm: "aarch64", intel: "x64"
 
-  version "0.6.0"
-  sha256 arm:   "570fe5482edcb9281b2d1d13378563dbbd788d59b49e24fa1e51103598bc483e",
-         intel: "2731ef249cd65efff60db10e359e0b9326d2765b95d5708be4231ad08095e304"
+  version "0.6.1"
+  sha256 arm:   "8e5c12f19b441d2667f0ecfe0eb0f16eec42a6ffb57fb1950bae6dc9ffe60c20",
+         intel: "7c4a27d710158baa3e1afa8dff89c6f9fb7584c98d531bd483b8badcd2270282"
 
   url "https://github.com/Julideorg/JulIde/releases/download/v#{version}/julide_#{version}_#{arch}.dmg"
   name "julIDE"
