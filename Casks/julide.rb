@@ -17,8 +17,11 @@ cask "julide" do
 
   # auto_updates: julIDE updates itself through tauri-plugin-updater, so brew must not
   # try to manage upgrades on its behalf.
+  #
+  # No `depends_on macos:`: the app's LSMinimumSystemVersion (10.13) is older than any
+  # macOS Homebrew runs on, so it would gate nothing, and pre-Big Sur symbols such as
+  # `:catalina` are now a hard error in `brew install`.
   auto_updates true
-  depends_on macos: :catalina
 
   app "julide.app"
 
