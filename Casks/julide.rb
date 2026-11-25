@@ -18,19 +18,19 @@ cask "julide" do
   # auto_updates: julIDE updates itself through tauri-plugin-updater, so brew must not
   # try to manage upgrades on its behalf.
   #
-  # No `depends_on macos:`: the app's LSMinimumSystemVersion (10.13) is older than any
-  # macOS Homebrew runs on, so it would gate nothing, and pre-Big Sur symbols such as
-  # `:catalina` are now a hard error in `brew install`.
+  # `depends_on :macos` carries no version on purpose: the app's LSMinimumSystemVersion
+  # (10.13) is older than any macOS Homebrew runs on, so a minimum would gate nothing,
+  # and pre-Big Sur symbols such as `:catalina` are now a hard error in `brew install`.
   auto_updates true
+  depends_on :macos
 
   app "julide.app"
 
   # julIDE is not code-signed or notarized yet, so the quarantine attribute Homebrew
   # applies would make Gatekeeper refuse to launch it. Clear it here and say so in the
   # caveats below. Remove this block once the app is signed and notarized.
-  postflight do
-    system_command "/usr/bin/xattr",
-                   args: ["-dr", "com.apple.quarantine", "#{appdir}/julide.app"]
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{appdir}}/julide.app"]
   end
 
   zap trash: [

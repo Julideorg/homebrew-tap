@@ -41,12 +41,13 @@ third-party tap is the only way to ship julIDE through Homebrew today.
 
 Left alone, Homebrew's quarantine attribute makes Gatekeeper refuse to launch the app.
 The cask therefore runs `xattr -dr com.apple.quarantine` on the installed bundle in a
-`postflight` step and prints a caveat saying it did. If you would rather Gatekeeper stay
-in charge, install the `.dmg` from the
+`postflight_steps` block and prints a caveat saying it did. If you would rather
+Gatekeeper stay in charge, install the `.dmg` from the
 [releases page](https://github.com/Julideorg/JulIde/releases) instead and decide for
 yourself.
 
-Both the `postflight` block and this section go away once julIDE is signed and notarized.
+Both the `postflight_steps` block and this section go away once julIDE is signed and
+notarized.
 
 ## Maintenance
 

@@ -38,7 +38,7 @@ jobs:
           shellcheck --enable=all scripts/bump-julide.sh
           shfmt --diff scripts/bump-julide.sh
 
-      # Passes clean today, including the legacy `postflight` block that julIDE needs
+      # Passes clean today, including the `postflight_steps` block that julIDE needs
       # for as long as it ships unsigned, so this is a required check. `always()` so a
       # style failure does not hide audit findings.
       - name: brew audit
